@@ -302,10 +302,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 **LxzndR** - GitHub: [@LxzndR](https://github.com/LxzndR)
 
-## 📞 Support
-
-For support, email support@example.com or open an issue on GitHub.
-
----
-
 **Built with ❤️ using Laravel and React**
