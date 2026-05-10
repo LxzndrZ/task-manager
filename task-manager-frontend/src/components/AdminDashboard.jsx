@@ -19,7 +19,6 @@ import {
 } from "@mui/material";
 import API_URL from "../config/api";
 import StatusChip from "./StatusChip";
-import AppNavbar from "./AppNavbar";
 
 function AdminDashboard() {
   const [error, setError] = useState("");
@@ -236,9 +235,25 @@ function AdminDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/login");
+  const handleLogout = async () => {
+    const token = localStorage.getItem("token");
+
+    try {
+      await axios.post(
+        `${API_URL}/logout`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+    } catch {
+      console.log("Backend logout failed, clearing local session.");
+    } finally {
+      localStorage.clear();
+      navigate("/login");
+    }
   };
 
   const startEditTask = (task) => {

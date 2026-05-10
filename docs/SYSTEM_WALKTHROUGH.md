@@ -770,20 +770,10 @@ Backend error handling mostly comes from:
 Current React behavior:
 
 1. User clicks `Logout`.
-2. React clears all `localStorage`.
-3. React navigates to `/login`.
-
-Important note:
-
-- The backend has `POST /logout`, but React currently does not call it.
-- Because of that, the Sanctum token row can remain in `personal_access_tokens` after frontend logout.
-
-Better future flow:
-
-1. React sends `POST /logout` with the bearer token.
-2. Laravel deletes the current Sanctum token.
-3. React clears `localStorage`.
-4. React navigates to `/login`.
+2. React sends `POST /logout` with the bearer token.
+3. Laravel deletes the current Sanctum token with `currentAccessToken()->delete()`.
+4. React clears all `localStorage`.
+5. React navigates to `/login`.
 
 ## Fresh Install Expectations
 
@@ -800,15 +790,13 @@ For the system to work after migrations:
 
 Current seeder note:
 
-- `DatabaseSeeder.php` currently creates only `Test User`.
-- It does not create roles or the default admin login shown in the frontend login form.
+- `DatabaseSeeder.php` creates the `admin` and `employee` roles.
+- It creates `admin@test.com`, `employee@test.com`, and `employee2@test.com`.
+- All seeded users use `password123`.
 
 ## Known System Risks and Improvement Areas
 
 These are not blockers for understanding the system, but they are worth knowing:
 
 - Frontend route protection depends on `localStorage`, which users can edit. Backend middleware is the real security layer.
-- React logout does not call the backend logout endpoint.
-- `PUT /tasks/{id}` does not restrict status values as strictly as task creation and employee status update.
 - `task_user` has no database-level unique constraint on `(task_id, user_id)`.
-- Roles are required by the app but are not currently created in the default seeder.

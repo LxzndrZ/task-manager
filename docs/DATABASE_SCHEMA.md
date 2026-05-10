@@ -2,11 +2,11 @@
 
 Backend project: `task-manager-backend`
 
-Default database connection from `.env.example`: `sqlite`
+Default database connection from `.env.example`: `mysql`
 
 Important database-related settings:
 
-- `DB_CONNECTION=sqlite`
+- `DB_CONNECTION=mysql`
 - `SESSION_DRIVER=database`
 - `QUEUE_CONNECTION=database`
 - `CACHE_STORE=database`
@@ -157,7 +157,7 @@ Current app behavior:
 
 - `POST /login` creates a token.
 - `POST /register` creates a token.
-- `POST /logout` deletes the current token, but the React app currently clears `localStorage` without calling this endpoint.
+- `POST /logout` deletes the current token. The admin and employee dashboards call this endpoint before clearing `localStorage`.
 
 ### `roles`
 
@@ -188,7 +188,7 @@ Expected role rows:
 
 Important note:
 
-- The current `DatabaseSeeder.php` only creates a test user and does not create `admin` or `employee` roles.
+- `DatabaseSeeder.php` creates the `admin` and `employee` roles.
 - Because controllers call `assignRole('employee')`, the `employee` role must exist before registering or creating employees.
 - Because routes use `role:admin` and `role:employee`, both roles must exist for role-based access to work.
 
@@ -570,27 +570,15 @@ Current seeder: `database/seeders/DatabaseSeeder.php`
 
 Current seeded data:
 
-- One user:
-  - `name`: `Test User`
-  - `email`: `test@example.com`
+| Role | Name | Email | Password |
+| --- | --- | --- | --- |
+| `admin` | `Admin User` | `admin@test.com` | `password123` |
+| `employee` | `Employee One` | `employee@test.com` | `password123` |
+| `employee` | `Employee Two` | `employee2@test.com` | `password123` |
 
-Current seeder gaps:
-
-- It does not create `admin` or `employee` roles.
-- It does not assign a role to the test user.
-- It does not create the default frontend login user `admin@test.com`.
-
-Suggested minimum seed data for this app:
-
-| Table | Suggested Rows |
-| --- | --- |
-| `roles` | `admin`, `employee` |
-| `users` | One admin user |
-| `model_has_roles` | Assign admin role to admin user |
+The seeder uses `firstOrCreate`, so running it again does not duplicate these roles or users.
 
 ## Schema Notes and Potential Improvements
 
 - Add a unique index on `task_user(task_id, user_id)` to prevent duplicate assignments at the database level.
 - Add status validation at the database level if your database supports check constraints.
-- Make `tasks.status` consistent across controllers; create and status update validate allowed statuses, but full task update currently accepts any string.
-- Add seeders for `admin` and `employee` roles so `assignRole('employee')` works after a fresh migration.

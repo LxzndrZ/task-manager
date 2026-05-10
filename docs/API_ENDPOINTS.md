@@ -22,7 +22,7 @@ Authorization: Bearer {token}
 | --- | --- | --- | --- | --- | --- |
 | `POST` | `/register` | No | Public | `AuthController@register` | `Register.jsx` |
 | `POST` | `/login` | No | Public | `AuthController@login` | `Login.jsx` |
-| `POST` | `/logout` | Yes | Any authenticated user | `AuthController@logout` | Not currently called by React |
+| `POST` | `/logout` | Yes | Any authenticated user | `AuthController@logout` | `AdminDashboard.jsx`, `EmployeeDashboard.jsx` |
 | `GET` | `/profile/{id}` | Yes | Any authenticated user | `UserController@profile` | `Login.jsx`, `AdminDashboard.jsx`, `EmployeeDashboard.jsx`, `ProfilePage.jsx` |
 | `PATCH` | `/profile/{id}` | Yes | Any authenticated user | `UserController@updateProfile` | `ProfilePage.jsx` |
 | `POST` | `/profile/{id}/photo` | Yes | Any authenticated user | `UserController@uploadProfilePhoto` | `ProfilePage.jsx` |
@@ -120,12 +120,16 @@ Success response:
 
 ### `POST /logout`
 
-Used by: route exists, but React currently does not call it.
+Used by:
+
+- `task-manager-frontend/src/components/AdminDashboard.jsx`
+- `task-manager-frontend/src/components/EmployeeDashboard.jsx`
 
 Current frontend behavior:
 
-- `AdminDashboard.jsx` and `EmployeeDashboard.jsx` log out by clearing `localStorage` and navigating to `/login`.
-- The backend token is not deleted because `/logout` is not called.
+- `AdminDashboard.jsx` and `EmployeeDashboard.jsx` send `POST /logout` with the current bearer token.
+- The backend deletes the current Sanctum access token.
+- React clears `localStorage` and navigates to `/login`.
 
 What the backend route does:
 
@@ -459,7 +463,7 @@ Request body:
 }
 ```
 
-Note: Unlike task creation and employee status updates, the backend update method currently validates `status` as a required string but does not restrict it to `pending`, `in_progress`, or `completed`.
+The backend restricts `status` to the same allowed values used by task creation and employee status updates: `pending`, `in_progress`, and `completed`.
 
 ### `DELETE /tasks/{id}`
 
@@ -685,6 +689,4 @@ API flow on employee delete:
 
 ## Notes and Potential Improvements
 
-- React logout clears local state but does not call `POST /logout`, so Sanctum tokens remain valid until they expire or are manually removed.
-- `PUT /tasks/{id}` does not restrict `status` to the same allowed list used by create and status update.
 - `GET /users` returns all users to admins, then React filters employees. This is fine for small apps, but an employee-only endpoint or query parameter could reduce client-side filtering later.

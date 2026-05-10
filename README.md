@@ -32,7 +32,7 @@ A full-stack task management app built with a Laravel API and a React/Vite front
 
 - Laravel 13
 - PHP 8.3+
-- SQLite by default in `.env.example`
+- MySQL by default in `.env.example`
 - Laravel Sanctum
 - Spatie Laravel Permission
 - Spatie Laravel Media Library
@@ -87,7 +87,7 @@ The API runs at:
 http://127.0.0.1:8000/api
 ```
 
-The default `.env.example` uses SQLite. If the SQLite database file does not exist, create `task-manager-backend/database/database.sqlite` before running migrations.
+The default `.env.example` uses MySQL. Create a MySQL database, then set `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` in `task-manager-backend/.env` before running migrations.
 
 ### Frontend
 
@@ -109,21 +109,23 @@ The API base URL is defined in:
 task-manager-frontend/src/config/api.jsx
 ```
 
-## Important Seed Data Note
+## Seeded Test Accounts
 
-The current `DatabaseSeeder.php` only creates:
+Run this after migrations:
 
-```txt
-test@example.com
+```bash
+php artisan db:seed
 ```
 
-It does not create the required `admin` and `employee` roles, and it does not create the login form's sample `admin@test.com` account. For a fresh install, create these before using the app:
+The current `DatabaseSeeder.php` creates the required roles and starter users:
 
-- Role: `admin`
-- Role: `employee`
-- At least one user assigned to the `admin` role
+| Role | Email | Password |
+| --- | --- | --- |
+| `admin` | `admin@test.com` | `password123` |
+| `employee` | `employee@test.com` | `password123` |
+| `employee` | `employee2@test.com` | `password123` |
 
-Employee self-registration and admin-created employees both call `assignRole('employee')`, so the `employee` role must already exist.
+Employee self-registration and admin-created employees both call `assignRole('employee')`, so seeding first gives fresh installs the roles they need.
 
 ## Frontend Routes
 

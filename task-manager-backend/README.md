@@ -9,7 +9,7 @@ Laravel API for the Task Manager app.
 - Laravel Sanctum for bearer-token auth
 - Spatie Laravel Permission for `admin` and `employee` roles
 - Spatie Media Library for profile photos
-- SQLite by default from `.env.example`
+- MySQL by default from `.env.example`
 
 ## Setup
 
@@ -22,11 +22,7 @@ php artisan storage:link
 php artisan serve
 ```
 
-If using the default SQLite config, make sure this file exists before migration:
-
-```txt
-database/database.sqlite
-```
+The default `.env.example` uses MySQL. Create a MySQL database, then update `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` in `.env`.
 
 ## API Base
 
@@ -45,9 +41,21 @@ http://127.0.0.1:8000/api
 | `app/Models/User.php` | User model with Sanctum, roles, media, and task relationship |
 | `app/Models/Task.php` | Task model with assigned user relationship |
 
-## Seed Data Warning
+## Seed Data
 
-The current seeder only creates `test@example.com`. It does not create the `admin` and `employee` roles or an admin account. A fresh database needs those records before login, registration, or employee creation will work correctly.
+Run:
+
+```bash
+php artisan db:seed
+```
+
+The current seeder creates:
+
+| Role | Email | Password |
+| --- | --- | --- |
+| `admin` | `admin@test.com` | `password123` |
+| `employee` | `employee@test.com` | `password123` |
+| `employee` | `employee2@test.com` | `password123` |
 
 ## Commands
 

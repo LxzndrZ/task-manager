@@ -93,9 +93,25 @@ function EmployeeDashboard() {
     });
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/login");
+  const handleLogout = async () => {
+    const token = localStorage.getItem("token");
+
+    try {
+      await axios.post(
+        `${API_URL}/logout`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+    } catch {
+      console.log("Backend logout failed, clearing local session.");
+    } finally {
+      localStorage.clear();
+      navigate("/login");
+    }
   };
 
   return (

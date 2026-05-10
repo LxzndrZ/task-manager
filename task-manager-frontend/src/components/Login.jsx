@@ -77,15 +77,6 @@ function Login() {
             Login
           </Typography>
 
-          <Button
-            fullWidth
-            variant="text"
-            sx={{ mt: 1 }}
-            onClick={() => navigate("/register")}
-          >
-            Create an account
-          </Button>
-
           <Typography sx={{ mb: 3, color: "text.secondary" }}>
             Sign in to your task manager account.
           </Typography>
@@ -124,6 +115,16 @@ function Login() {
             >
               {loading ? "Logging in..." : "Login"}
             </Button>
+
+            <Button
+              fullWidth
+              variant="text"
+              sx={{ mt: 1 }}
+              onClick={() => navigate("/register")}
+            >
+              Create an account
+            </Button>
+            
           </Box>
         </CardContent>
       </Card>
