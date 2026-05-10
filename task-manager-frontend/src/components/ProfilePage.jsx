@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import axios from 'axios';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import axios from "axios";
 import {
   Box,
   Button,
@@ -11,29 +11,33 @@ import {
   Typography,
   Alert,
   Avatar,
-} from '@mui/material';
-import API_URL from '../config/api';
+} from "@mui/material";
+import API_URL from "../config/api";
 
 function ProfilePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const token = localStorage.getItem('token');
-  const storedUser = JSON.parse(localStorage.getItem('user'));
-  const role = localStorage.getItem('role');
+  const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const token = localStorage.getItem("token");
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const role = localStorage.getItem("role");
+  const roleLabel = role === "admin" ? "Admin" : "Employee";
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [photo, setPhoto] = useState(null);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   const {
     data: profile,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ['profile', storedUser.id],
+    queryKey: ["profile", storedUser.id],
     queryFn: async () => {
       const response = await axios.get(`${API_URL}/profile/${storedUser.id}`, {
         headers: {
@@ -47,8 +51,8 @@ function ProfilePage() {
 
   useEffect(() => {
     if (profile) {
-      setName(profile.name || '');
-      setEmail(profile.email || '');
+      setName(profile.name || "");
+      setEmail(profile.email || "");
     }
   }, [profile]);
 
@@ -59,42 +63,45 @@ function ProfilePage() {
         {
           name,
           email,
+          ...(password ? { password } : {}),
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       return response.data;
     },
     onSuccess: (updatedUser) => {
       localStorage.setItem(
-        'user',
+        "user",
         JSON.stringify({
           ...storedUser,
           name: updatedUser.name,
           email: updatedUser.email,
           photo_url: updatedUser.photo_url || storedUser.photo_url,
-        })
+        }),
       );
 
-      queryClient.invalidateQueries({ queryKey: ['profile', storedUser.id] });
+      queryClient.invalidateQueries({ queryKey: ["profile", storedUser.id] });
 
-      setMessage('Profile updated successfully.');
-      setError('');
+      setMessage("Profile updated successfully.");
+      setError("");
+      setPassword("");
+      setPasswordConfirmation("");
     },
     onError: () => {
-      setError('Failed to update profile.');
-      setMessage('');
+      setError("Failed to update profile.");
+      setMessage("");
     },
   });
 
   const uploadPhotoMutation = useMutation({
     mutationFn: async () => {
       const formData = new FormData();
-      formData.append('photo', photo);
+      formData.append("photo", photo);
 
       const response = await axios.post(
         `${API_URL}/profile/${storedUser.id}/photo`,
@@ -102,9 +109,9 @@ function ProfilePage() {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       return response.data;
@@ -114,28 +121,51 @@ function ProfilePage() {
 
       if (photoUrl) {
         localStorage.setItem(
-          'user',
+          "user",
           JSON.stringify({
             ...storedUser,
             photo_url: photoUrl,
-          })
+          }),
         );
       }
 
-      queryClient.invalidateQueries({ queryKey: ['profile', storedUser.id] });
+      queryClient.invalidateQueries({ queryKey: ["profile", storedUser.id] });
 
-      setMessage('Profile photo uploaded successfully.');
-      setError('');
+      setMessage("Profile photo uploaded successfully.");
+      setError("");
       setPhoto(null);
     },
     onError: () => {
-      setError('Failed to upload profile photo.');
-      setMessage('');
+      setError("Failed to upload profile photo.");
+      setMessage("");
     },
   });
 
   const handleUpdateProfile = (event) => {
     event.preventDefault();
+    setError("");
+    setMessage("");
+
+    if (!name.trim()) {
+      setError("Name is required.");
+      return;
+    }
+
+    if (!email.trim()) {
+      setError("Email is required.");
+      return;
+    }
+
+    if (password && password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
+    if (password !== passwordConfirmation) {
+      setError("Passwords do not match.");
+      return;
+    }
+
     updateProfileMutation.mutate();
   };
 
@@ -143,7 +173,7 @@ function ProfilePage() {
     event.preventDefault();
 
     if (!photo) {
-      setError('Please choose a photo first.');
+      setError("Please choose a photo first.");
       return;
     }
 
@@ -151,22 +181,22 @@ function ProfilePage() {
   };
 
   const goBack = () => {
-    if (role === 'admin') {
-      navigate('/admin/dashboard');
+    if (role === "admin") {
+      navigate("/admin/dashboard");
     } else {
-      navigate('/employee/dashboard');
+      navigate("/employee/dashboard");
     }
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f4f6f8', p: 4 }}>
-      <Box sx={{ maxWidth: 700, mx: 'auto', mb: 3 }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f4f6f8", p: 4 }}>
+      <Box sx={{ maxWidth: 700, mx: "auto", mb: 3 }}>
         <Button variant="outlined" onClick={goBack}>
           Back to Dashboard
         </Button>
       </Box>
 
-      <Card sx={{ maxWidth: 700, mx: 'auto' }}>
+      <Card sx={{ maxWidth: 700, mx: "auto" }}>
         <CardContent>
           <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
             Profile
@@ -176,7 +206,7 @@ function ProfilePage() {
             Manage your account details.
           </Typography>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
             <Avatar
               src={profile?.photo_url || storedUser?.photo_url}
               sx={{ width: 80, height: 80 }}
@@ -189,6 +219,7 @@ function ProfilePage() {
               <Typography color="text.secondary">
                 {email || storedUser?.email}
               </Typography>
+              <Typography color="text.secondary">Role: {roleLabel}</Typography>
             </Box>
           </Box>
 
@@ -224,13 +255,32 @@ function ProfilePage() {
               onChange={(event) => setEmail(event.target.value)}
             />
 
+            <TextField
+              fullWidth
+              label="New Password"
+              type="password"
+              margin="normal"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              helperText="Leave blank to keep current password"
+            />
+
+            <TextField
+              fullWidth
+              label="Confirm New Password"
+              type="password"
+              margin="normal"
+              value={passwordConfirmation}
+              onChange={(event) => setPasswordConfirmation(event.target.value)}
+            />
+
             <Button
               type="submit"
               variant="contained"
               sx={{ mt: 2 }}
               disabled={updateProfileMutation.isPending}
             >
-              {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+              {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </Box>
 
@@ -252,7 +302,9 @@ function ProfilePage() {
                 sx={{ mt: 2 }}
                 disabled={uploadPhotoMutation.isPending}
               >
-                {uploadPhotoMutation.isPending ? 'Uploading...' : 'Upload Photo'}
+                {uploadPhotoMutation.isPending
+                  ? "Uploading..."
+                  : "Upload Photo"}
               </Button>
             </Box>
           </Box>

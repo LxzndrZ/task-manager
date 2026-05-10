@@ -1,16 +1,68 @@
-# React + Vite
+# Task Manager Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React/Vite frontend for the Task Manager app.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19
+- Vite 8
+- React Router 7
+- TanStack React Query 5
+- Axios
+- Material UI 9
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev
+```
 
-## Expanding the ESLint configuration
+The app usually runs at:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```txt
+http://localhost:5173
+```
+
+The backend API URL is configured in:
+
+```txt
+src/config/api.jsx
+```
+
+Current value:
+
+```txt
+http://127.0.0.1:8000/api
+```
+
+## Routes
+
+| Route | Component | Access |
+| --- | --- | --- |
+| `/` | Redirect to `/login` | Public |
+| `/login` | `Login.jsx` | Public |
+| `/register` | `Register.jsx` | Public |
+| `/admin/dashboard` | `AdminDashboard.jsx` | Admin |
+| `/admin/users` | `UserManagement.jsx` | Admin |
+| `/employee/dashboard` | `EmployeeDashboard.jsx` | Employee |
+| `/profile` | `ProfilePage.jsx` | Authenticated |
+
+## Local State
+
+After login, the app stores these values in `localStorage`:
+
+- `token`
+- `user`
+- `role`
+
+Protected frontend routes check these values before rendering. API authorization still depends on Laravel Sanctum and backend role middleware.
+
+## Commands
+
+```bash
+npm run dev
+npm run build
+npm run preview
+npm run lint
+```

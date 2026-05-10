@@ -20,10 +20,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/tasks', [TaskController::class, 'store']);
         Route::put('/tasks/{id}', [TaskController::class, 'update']);
         Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
+        Route::post('/users', [UserController::class, 'store']);
+        Route::put('/users/{id}', [UserController::class, 'update']);
+        Route::delete('/users/{id}', [UserController::class, 'destroy']);
     });
 
     Route::middleware('role:employee')->group(function () {
-        Route::get('/my-tasks/{userId}', [TaskController::class, 'myTasks']);
+        Route::get('/my-tasks', [TaskController::class, 'myTasks']);
         Route::patch('/tasks/{id}/status', [TaskController::class, 'updateStatus']);
     });
 });

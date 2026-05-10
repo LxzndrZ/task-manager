@@ -36,24 +36,39 @@ class TaskController extends Controller
 
     public function updateStatus(Request $request, $id)
 {
+    $user = $request->user();
+
     $validated = $request->validate([
-        'status' => 'required|string|in:pending,in_progress,completed',
+        'status' => 'required|in:pending,in_progress,completed',
     ]);
 
     $task = Task::findOrFail($id);
 
-    $task->update([
-        'status' => $validated['status'],
-    ]);
+    $isAssigned = $task->users()
+        ->where('users.id', $user->id)
+        ->exists();
 
-    return response()->json($task);
-}
-    public function myTasks($userId)
-    {
-        $user = \App\Models\User::findOrFail($userId);
-
-        return response()->json($user->tasks->load('users'));
+    if (!$isAssigned) {
+        return response()->json([
+            'message' => 'You are not assigned to this task.'
+        ], 403);
     }
+
+    $task->status = $validated['status'];
+    $task->save();
+
+    return response()->json(
+        $task->load('users')
+    );
+}
+    public function myTasks(Request $request)
+{
+    $user = $request->user();
+
+    return response()->json(
+        $user->tasks()->with('users')->get()
+    );
+}
 
     public function update(Request $request, $id)
 {

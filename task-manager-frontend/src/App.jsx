@@ -1,16 +1,18 @@
-import { Routes, Route, Navigate, } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./components/Login";
 import ProfilePage from "./components/ProfilePage";
 import EmployeeDashboard from "./components/EmployeeDashboard";
 import AdminDashboard from "./components/AdminDashboard";
-
+import UserManagement from "./components/UserManagement";
+import Register from "./components/Register";
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/login" />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
 
       <Route
         path="/admin/dashboard"
@@ -38,6 +40,16 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute allowedRole="admin">
+            <UserManagement />
+          </ProtectedRoute>
+        }
+      />
+
     </Routes>
   );
 }

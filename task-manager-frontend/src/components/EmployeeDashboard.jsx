@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import axios from 'axios';
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import axios from "axios";
 import {
   Box,
   Button,
@@ -10,10 +10,9 @@ import {
   Typography,
   Alert,
   Avatar,
-} from '@mui/material';
-import API_URL from '../config/api';
-import StatusChip from './StatusChip';
-
+} from "@mui/material";
+import API_URL from "../config/api";
+import StatusChip from "./StatusChip";
 
 function EmployeeDashboard() {
   const [error, setError] = useState("");
@@ -41,9 +40,9 @@ function EmployeeDashboard() {
     isLoading: tasksLoading,
     isError: tasksError,
   } = useQuery({
-    queryKey: ["my-tasks", user.id],
+    queryKey: ["my-tasks"],
     queryFn: async () => {
-      const response = await axios.get(`${API_URL}/my-tasks/${user.id}`, {
+      const response = await axios.get(`${API_URL}/my-tasks`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -78,7 +77,7 @@ function EmployeeDashboard() {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["my-tasks", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["my-tasks"] });
     },
     onError: () => {
       setError("Failed to update task status.");
@@ -160,7 +159,11 @@ function EmployeeDashboard() {
           maxWidth: 1000,
           mx: "auto",
           display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(3, 1fr)",
+          },
           gap: 2,
           mb: 3,
         }}
@@ -215,18 +218,31 @@ function EmployeeDashboard() {
                 <StatusChip status={task.status} />
               </Box>
 
-              <Button
-                variant="contained"
-                onClick={() => updateTaskStatus(task.id, "completed")}
-                disabled={
-                  task.status === "completed" ||
-                  updateTaskStatusMutation.isPending
-                }
-              >
-                {task.status === "completed"
-                  ? "Completed"
-                  : "Mark as Completed"}
-              </Button>
+              {task.status === "pending" && (
+                <Button
+                  variant="contained"
+                  onClick={() => updateTaskStatus(task.id, "in_progress")}
+                  disabled={updateTaskStatusMutation.isPending}
+                >
+                  Start Task
+                </Button>
+              )}
+
+              {task.status === "in_progress" && (
+                <Button
+                  variant="contained"
+                  onClick={() => updateTaskStatus(task.id, "completed")}
+                  disabled={updateTaskStatusMutation.isPending}
+                >
+                  Complete Task
+                </Button>
+              )}
+
+              {task.status === "completed" && (
+                <Button variant="contained" disabled>
+                  Completed
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))}

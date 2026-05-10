@@ -15,9 +15,11 @@ import {
   InputLabel,
   FormControl,
   Avatar,
+  Pagination,
 } from "@mui/material";
 import API_URL from "../config/api";
 import StatusChip from "./StatusChip";
+import AppNavbar from "./AppNavbar";
 
 function AdminDashboard() {
   const [error, setError] = useState("");
@@ -36,6 +38,13 @@ function AdminDashboard() {
   const [editDescription, setEditDescription] = useState("");
   const [editStatus, setEditStatus] = useState("pending");
   const [editEmployeeIds, setEditEmployeeIds] = useState([]);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [employeeFilter, setEmployeeFilter] = useState("all");
+
+  const [page, setPage] = useState(1);
+  const tasksPerPage = 5;
 
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
@@ -77,6 +86,32 @@ function AdminDashboard() {
       completed: tasks.filter((task) => task.status === "completed").length,
     };
   }, [tasks]);
+
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((task) => {
+      const matchesSearch = task.title
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+      const matchesStatus =
+        statusFilter === "all" || task.status === statusFilter;
+
+      const matchesEmployee =
+        employeeFilter === "all" ||
+        task.users?.some((user) => user.id === Number(employeeFilter));
+
+      return matchesSearch && matchesStatus && matchesEmployee;
+    });
+  }, [tasks, searchTerm, statusFilter, employeeFilter]);
+
+  const pageCount = Math.ceil(filteredTasks.length / tasksPerPage);
+
+  const paginatedTasks = useMemo(() => {
+    const startIndex = (page - 1) * tasksPerPage;
+    const endIndex = startIndex + tasksPerPage;
+
+    return filteredTasks.slice(startIndex, endIndex);
+  }, [filteredTasks, page]);
 
   const createTaskMutation = useMutation({
     mutationFn: async (taskData) => {
@@ -264,6 +299,10 @@ function AdminDashboard() {
     fetchEmployees();
   }, []);
 
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, statusFilter, employeeFilter]);
+
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f4f6f8", p: 4 }}>
       <Box
@@ -295,6 +334,10 @@ function AdminDashboard() {
         <Box sx={{ display: "flex", gap: 1 }}>
           <Button variant="outlined" onClick={() => navigate("/profile")}>
             Profile
+          </Button>
+
+          <Button variant="outlined" onClick={() => navigate("/admin/users")}>
+            Manage Users
           </Button>
 
           <Button variant="outlined" color="error" onClick={handleLogout}>
@@ -332,7 +375,11 @@ function AdminDashboard() {
           maxWidth: 1000,
           mx: "auto",
           display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(3, 1fr)",
+          },
           gap: 2,
           mb: 3,
         }}
@@ -396,6 +443,7 @@ function AdminDashboard() {
                 onChange={(event) => setStatus(event.target.value)}
               >
                 <MenuItem value="pending">Pending</MenuItem>
+                <MenuItem value="in_progress">In Progress</MenuItem>
                 <MenuItem value="completed">Completed</MenuItem>
               </Select>
             </FormControl>
@@ -438,16 +486,77 @@ function AdminDashboard() {
         </CardContent>
       </Card>
 
+      <Card sx={{ maxWidth: 1000, mx: "auto", mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Filter Tasks
+          </Typography>
+
+          <Box
+            sx={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 2 }}
+          >
+            <TextField
+              fullWidth
+              label="Search by title"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={statusFilter}
+                label="Status"
+                onChange={(event) => setStatusFilter(event.target.value)}
+              >
+                <MenuItem value="all">All</MenuItem>
+                <MenuItem value="pending">Pending</MenuItem>
+                <MenuItem value="in_progress">In Progress</MenuItem>
+                <MenuItem value="completed">Completed</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel>Employee</InputLabel>
+              <Select
+                value={employeeFilter}
+                label="Employee"
+                onChange={(event) => setEmployeeFilter(event.target.value)}
+              >
+                <MenuItem value="all">All Employees</MenuItem>
+
+                {employees.map((employee) => (
+                  <MenuItem key={employee.id} value={employee.id}>
+                    {employee.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        </CardContent>
+      </Card>
+
       <Box sx={{ maxWidth: 1000, mx: "auto" }}>
-        {tasks.length === 0 && (
+        {filteredTasks.length === 0 && (
           <Card>
             <CardContent>
-              <Typography>No tasks available.</Typography>
+              <Typography>No matching tasks found.</Typography>
             </CardContent>
           </Card>
         )}
 
-        {tasks.map((task) => (
+        {filteredTasks.length > tasksPerPage && (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+            <Pagination
+              count={pageCount}
+              page={page}
+              onChange={(event, value) => setPage(value)}
+              color="primary"
+            />
+          </Box>
+        )}
+
+        {paginatedTasks.map((task) => (
           <Card key={task.id} sx={{ mb: 2 }}>
             <CardContent>
               {editingTaskId === task.id ? (
@@ -476,6 +585,7 @@ function AdminDashboard() {
                       onChange={(event) => setEditStatus(event.target.value)}
                     >
                       <MenuItem value="pending">Pending</MenuItem>
+                      <MenuItem value="in_progress">In Progress</MenuItem>
                       <MenuItem value="completed">Completed</MenuItem>
                     </Select>
                   </FormControl>

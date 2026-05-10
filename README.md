@@ -1,305 +1,205 @@
 # Task Manager
 
-A full-stack web application for managing tasks with role-based access control. Admins can create and assign tasks to employees, while employees can view their assigned tasks and update their status.
+A full-stack task management app built with a Laravel API and a React/Vite frontend. Admin users manage employees and tasks, while employees view assigned work and move tasks through the workflow.
 
-## 🎯 Features
+## Current Features
 
-### Admin Dashboard
-- 📊 View task statistics (total, pending, completed)
-- ✏️ Create, edit, and delete tasks
-- 👥 Assign multiple employees to tasks
-- 🎯 Update task status and descriptions
-- 📋 View all employees and tasks
+### Admin
 
-### Employee Dashboard
-- 📋 View assigned tasks only
-- 📊 Track personal task statistics
-- ✅ Mark tasks as completed
-- 🔍 View task details and assignments
+- View task totals for all tasks, pending tasks, and completed tasks.
+- Create, edit, filter, paginate, and delete tasks.
+- Assign one or more employees to each task from the admin dashboard.
+- Manage employee accounts from `/admin/users`.
+- Update profile details, password, and profile photo.
 
-### User Management
-- 👤 User authentication (login/register)
-- 🔐 Role-based access control (Admin/Employee)
-- 📝 Profile management
-- 🖼️ Profile photo upload
+### Employee
 
-## 🛠️ Tech Stack
+- Register an employee account from `/register`.
+- View only tasks assigned to the authenticated employee.
+- Move tasks from `pending` to `in_progress`, then to `completed`.
+- Update profile details, password, and profile photo.
+
+### Shared
+
+- Laravel Sanctum bearer-token authentication.
+- Spatie role middleware for admin and employee API access.
+- React route protection using the stored token and role.
+- Profile photo uploads through Spatie Media Library.
+
+## Tech Stack
 
 ### Backend
-- **Framework**: Laravel 13
-- **Database**: MySQL
-- **Authentication**: Laravel Sanctum (API tokens)
-- **Authorization**: Spatie Laravel Permission
-- **Media Handling**: Spatie Laravel MediaLibrary
-- **Build Tool**: Vite
+
+- Laravel 13
+- PHP 8.3+
+- SQLite by default in `.env.example`
+- Laravel Sanctum
+- Spatie Laravel Permission
+- Spatie Laravel Media Library
 
 ### Frontend
-- **Framework**: React 19
-- **UI Library**: Material-UI (MUI)
-- **State Management**: React Query
-- **HTTP Client**: Axios
-- **Routing**: React Router v7
-- **Build Tool**: Vite
 
-## 📋 Prerequisites
+- React 19
+- Vite 8
+- React Router 7
+- TanStack React Query 5
+- Axios
+- Material UI 9
 
-- **PHP**: 8.3 or higher
-- **Node.js**: 18 or higher
-- **Composer**: Latest version
-- **MySQL**: 5.7 or higher
+## Project Structure
 
-## 🚀 Installation
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/LxzndR/task-manager.git
-cd task-manager
+```txt
+task-manager/
+├── README.md
+├── docs/
+│   ├── API_ENDPOINTS.md
+│   ├── DATABASE_SCHEMA.md
+│   └── SYSTEM_WALKTHROUGH.md
+├── task-manager-backend/
+│   ├── app/Http/Controllers/
+│   ├── app/Models/
+│   ├── database/migrations/
+│   ├── database/seeders/
+│   └── routes/api.php
+└── task-manager-frontend/
+    ├── src/App.jsx
+    ├── src/config/api.jsx
+    └── src/components/
 ```
 
-### 2. Setup Backend
+## Setup
+
+### Backend
 
 ```bash
 cd task-manager-backend
-
-# Install dependencies
 composer install
-
-# Create environment file
 cp .env.example .env
-
-# Generate application key
 php artisan key:generate
-
-# Run migrations
 php artisan migrate
-
-# Create storage symlink for uploads
 php artisan storage:link
-
-# Start the development server
 php artisan serve
 ```
 
-The backend will run on `http://127.0.0.1:8000`
+The API runs at:
 
-### 3. Setup Frontend
+```txt
+http://127.0.0.1:8000/api
+```
+
+The default `.env.example` uses SQLite. If the SQLite database file does not exist, create `task-manager-backend/database/database.sqlite` before running migrations.
+
+### Frontend
 
 ```bash
 cd task-manager-frontend
-
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
 ```
 
-The frontend will run on `http://localhost:5173` (or the next available port)
+The React app usually runs at:
 
-## 🔐 Default Test Credentials
-
-```
-Email: admin@test.com
-Password: password123
+```txt
+http://localhost:5173
 ```
 
-## 📁 Project Structure
+The API base URL is defined in:
 
-```
-task-manager/
-├── task-manager-backend/          # Laravel API
-│   ├── app/
-│   │   ├── Models/               # Eloquent models (User, Task)
-│   │   ├── Http/
-│   │   │   └── Controllers/      # API controllers
-│   │   └── Providers/            # Service providers
-│   ├── database/
-│   │   ├── migrations/           # Database schema
-│   │   ├── factories/            # Seeders
-│   │   └── seeders/
-│   ├── routes/
-│   │   └── api.php              # API routes
-│   └── config/                   # Configuration files
-│
-└── task-manager-frontend/         # React SPA
-    ├── src/
-    │   ├── App.jsx              # Main component (routes, pages)
-    │   ├── main.jsx             # Entry point
-    │   └── assets/              # Static assets
-    ├── public/                  # Public files
-    └── vite.config.js          # Vite configuration
+```txt
+task-manager-frontend/src/config/api.jsx
 ```
 
-## 🔌 API Endpoints
+## Important Seed Data Note
 
-### Authentication (Public)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/register` | Register new user |
-| POST | `/api/login` | User login |
+The current `DatabaseSeeder.php` only creates:
 
-### Authenticated Routes
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/logout` | User logout |
-| GET | `/api/profile/{id}` | Get user profile |
-| PATCH | `/api/profile/{id}` | Update profile |
-| POST | `/api/profile/{id}/photo` | Upload profile photo |
-
-### Admin Routes
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/users` | List all users |
-| GET | `/api/tasks` | List all tasks |
-| POST | `/api/tasks` | Create task |
-| PUT | `/api/tasks/{id}` | Update task |
-| DELETE | `/api/tasks/{id}` | Delete task |
-
-### Employee Routes
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/my-tasks/{userId}` | Get assigned tasks |
-| PATCH | `/api/tasks/{id}/status` | Update task status |
-
-## 🗄️ Database Schema
-
-### Users
-- `id` - Primary key
-- `name` - User name
-- `email` - Unique email
-- `password` - Hashed password
-- `timestamps`
-
-### Tasks
-- `id` - Primary key
-- `title` - Task title
-- `description` - Task description
-- `status` - pending/completed
-- `timestamps`
-
-### Task-User (Pivot)
-- `id` - Primary key
-- `task_id` - Foreign key to tasks
-- `user_id` - Foreign key to users
-- `timestamps`
-
-## 🔄 Authentication Flow
-
-1. User logs in with email/password
-2. Backend validates credentials and returns API token
-3. Token stored in localStorage
-4. Frontend includes token in all API requests via `Authorization: Bearer {token}` header
-5. Backend validates token for each request
-
-## 📱 Frontend Routing
-
-```
-/                    → Redirect to /login
-/login               → Login page
-/register            → Register page
-/admin/dashboard     → Admin panel (requires admin role)
-/employee/dashboard  → Employee panel (requires employee role)
-/profile             → User profile (authenticated)
+```txt
+test@example.com
 ```
 
-## 🔒 Security Features
+It does not create the required `admin` and `employee` roles, and it does not create the login form's sample `admin@test.com` account. For a fresh install, create these before using the app:
 
-- ✅ Password hashing with bcrypt
-- ✅ API token authentication (Sanctum)
-- ✅ Role-based access control
-- ✅ CSRF protection
-- ✅ Secure file uploads
-- ✅ Input validation and sanitization
+- Role: `admin`
+- Role: `employee`
+- At least one user assigned to the `admin` role
 
-## 🧪 Available Scripts
+Employee self-registration and admin-created employees both call `assignRole('employee')`, so the `employee` role must already exist.
+
+## Frontend Routes
+
+| Route | Component | Access |
+| --- | --- | --- |
+| `/` | Redirect to `/login` | Public |
+| `/login` | `Login.jsx` | Public |
+| `/register` | `Register.jsx` | Public |
+| `/admin/dashboard` | `AdminDashboard.jsx` | Admin |
+| `/admin/users` | `UserManagement.jsx` | Admin |
+| `/employee/dashboard` | `EmployeeDashboard.jsx` | Employee |
+| `/profile` | `ProfilePage.jsx` | Authenticated |
+
+## API Summary
+
+Base URL:
+
+```txt
+http://127.0.0.1:8000/api
+```
+
+| Method | Endpoint | Access | Purpose |
+| --- | --- | --- | --- |
+| `POST` | `/register` | Public | Register an employee account |
+| `POST` | `/login` | Public | Log in and receive a Sanctum token |
+| `POST` | `/logout` | Authenticated | Delete the current token |
+| `GET` | `/profile/{id}` | Authenticated | Get profile data and photo URL |
+| `PATCH` | `/profile/{id}` | Authenticated | Update name, email, and optional password |
+| `POST` | `/profile/{id}/photo` | Authenticated | Upload a profile photo |
+| `GET` | `/users` | Admin | List users with roles |
+| `POST` | `/users` | Admin | Create an employee |
+| `PUT` | `/users/{id}` | Admin | Update an employee |
+| `DELETE` | `/users/{id}` | Admin | Delete a non-admin user |
+| `GET` | `/tasks` | Admin | List all tasks with assignees |
+| `POST` | `/tasks` | Admin | Create a task |
+| `PUT` | `/tasks/{id}` | Admin | Update a task and assignments |
+| `DELETE` | `/tasks/{id}` | Admin | Delete a task |
+| `GET` | `/my-tasks` | Employee | List tasks assigned to the authenticated employee |
+| `PATCH` | `/tasks/{id}/status` | Employee | Update an assigned task status |
+
+## Task Statuses
+
+The app uses these statuses:
+
+- `pending`
+- `in_progress`
+- `completed`
+
+Admins can choose all three statuses when creating or editing tasks. Employees can start a pending task, then complete an in-progress task.
+
+## Documentation
+
+Detailed docs are in:
+
+- `docs/API_ENDPOINTS.md`
+- `docs/DATABASE_SCHEMA.md`
+- `docs/SYSTEM_WALKTHROUGH.md`
+
+## Common Commands
 
 ### Backend
+
 ```bash
-php artisan serve              # Start dev server
-php artisan migrate            # Run migrations
-php artisan migrate:refresh    # Reset database
-php artisan storage:link       # Create storage symlink
+php artisan serve
+php artisan migrate
+php artisan migrate:fresh
+php artisan db:seed
+php artisan storage:link
+php artisan test
 ```
 
 ### Frontend
+
 ```bash
-npm run dev                     # Start dev server
-npm run build                   # Build for production
-npm run preview                 # Preview production build
-npm run lint                    # Run ESLint
-```
-
-## 📦 Dependencies
-
-### Backend Key Packages
-- `laravel/framework` - Web framework
-- `laravel/sanctum` - API authentication
-- `spatie/laravel-permission` - Role-based access
-- `spatie/laravel-medialibrary` - File uploads
-- `laravel/tinker` - REPL
-
-### Frontend Key Packages
-- `react` - UI library
-- `react-router-dom` - Routing
-- `@tanstack/react-query` - Server state management
-- `@mui/material` - UI components
-- `axios` - HTTP client
-
-## 🐛 Troubleshooting
-
-### Backend won't start
-```bash
-# Clear cache
-php artisan cache:clear
-php artisan config:clear
-
-# Regenerate app key
-php artisan key:generate
-
-# Ensure database exists and is accessible
-php artisan migrate
-```
-
-### Frontend won't start
-```bash
-# Clear node modules
-rm -rf node_modules
-npm install
-
-# Clear cache
 npm run dev
+npm run build
+npm run preview
+npm run lint
 ```
-
-### CORS Issues
-- Backend runs on `http://127.0.0.1:8000`
-- Frontend runs on `http://localhost:5173`
-- Ensure CORS is properly configured in Laravel
-
-## 📝 Future Enhancements
-
-- [ ] Task categories/tags
-- [ ] Task priority levels
-- [ ] Task comments and activity logs
-- [ ] Email notifications
-- [ ] Task deadlines and reminders
-- [ ] Dashboard analytics and reports
-- [ ] Dark mode
-- [ ] Mobile app (React Native)
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 👨‍💻 Author
-
-**LxzndR** - GitHub: [@LxzndR](https://github.com/LxzndR)
-
-**Built with ❤️ using Laravel and React**
