@@ -67,11 +67,15 @@ function Login() {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
+        height: "100dvh",
+        minHeight: 0,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         bgcolor: "#f4f6f8",
+        overflow: "hidden",
+        boxSizing: "border-box",
+        p: 2,
       }}
     >
       <Card sx={{ width: 420 }}>
