@@ -18,13 +18,15 @@ import {
   Pagination,
 } from "@mui/material";
 import API_URL from "../config/api";
-import StatusChip from "./StatusChip";
+import StatusChip from "../components/StatusChip";
+import { clearAuthSession, getAuthToken, getAuthUser } from "../utils/authSession";
 
 function AdminDashboard() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const [success, setSuccess] = useState("");
   const queryClient = useQueryClient();
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -45,8 +47,8 @@ function AdminDashboard() {
   const [page, setPage] = useState(1);
   const tasksPerPage = 5;
 
-  const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user"));
+  const token = getAuthToken();
+  const user = getAuthUser();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user.id],
@@ -82,6 +84,7 @@ function AdminDashboard() {
     return {
       total: tasks.length,
       pending: tasks.filter((task) => task.status === "pending").length,
+      inProgress: tasks.filter((task) => task.status === "in_progress").length,
       completed: tasks.filter((task) => task.status === "completed").length,
     };
   }, [tasks]);
@@ -127,6 +130,7 @@ function AdminDashboard() {
       setDescription("");
       setStatus("pending");
       setEmployeeIds([]);
+      setShowCreateForm(false);
 
       setSuccess("Task created successfully.");
       setError("");
@@ -236,7 +240,7 @@ function AdminDashboard() {
   };
 
   const handleLogout = async () => {
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
 
     try {
       await axios.post(
@@ -251,7 +255,7 @@ function AdminDashboard() {
     } catch {
       console.log("Backend logout failed, clearing local session.");
     } finally {
-      localStorage.clear();
+      clearAuthSession();
       navigate("/login");
     }
   };
@@ -393,7 +397,7 @@ function AdminDashboard() {
           gridTemplateColumns: {
             xs: "1fr",
             sm: "repeat(2, 1fr)",
-            md: "repeat(3, 1fr)",
+            md: "repeat(4, 1fr)",
           },
           gap: 2,
           mb: 3,
@@ -419,6 +423,15 @@ function AdminDashboard() {
 
         <Card>
           <CardContent>
+            <Typography color="text.secondary">In Progress Tasks</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 700 }}>
+              {taskStats.inProgress}
+            </Typography>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent>
             <Typography color="text.secondary">Completed Tasks</Typography>
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
               {taskStats.completed}
@@ -427,79 +440,90 @@ function AdminDashboard() {
         </Card>
       </Box>
 
-      <Card sx={{ maxWidth: 1000, mx: "auto", mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Create Task
-          </Typography>
+      <Box sx={{ maxWidth: 1000, mx: "auto", mb: 2 }}>
+        <Button
+          variant="contained"
+          onClick={() => setShowCreateForm(!showCreateForm)}
+        >
+          {showCreateForm ? "Hide Create Task Form" : "Show Create Task Form"}
+        </Button>
+      </Box>
 
-          <Box component="form" onSubmit={createTask}>
-            <TextField
-              fullWidth
-              label="Title"
-              margin="normal"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-            />
+      {showCreateForm && (
+        <Card sx={{ maxWidth: 1000, mx: "auto", mb: 3 }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Create Task
+            </Typography>
 
-            <TextField
-              fullWidth
-              label="Description"
-              margin="normal"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-            />
+            <Box component="form" onSubmit={createTask}>
+              <TextField
+                fullWidth
+                label="Title"
+                margin="normal"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+              />
 
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Status</InputLabel>
-              <Select
-                value={status}
-                label="Status"
-                onChange={(event) => setStatus(event.target.value)}
+              <TextField
+                fullWidth
+                label="Description"
+                margin="normal"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+              />
+
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={status}
+                  label="Status"
+                  onChange={(event) => setStatus(event.target.value)}
+                >
+                  <MenuItem value="pending">Pending</MenuItem>
+                  <MenuItem value="in_progress">In Progress</MenuItem>
+                  <MenuItem value="completed">Completed</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Assign Employees</InputLabel>
+                <Select
+                  multiple
+                  value={employeeIds}
+                  label="Assign Employees"
+                  onChange={(event) => setEmployeeIds(event.target.value)}
+                  renderValue={(selected) =>
+                    employees
+                      .filter((employee) => selected.includes(employee.id))
+                      .map((employee) => employee.name)
+                      .join(", ")
+                  }
+                >
+                  {employees.length === 0 && (
+                    <MenuItem disabled>No employees found</MenuItem>
+                  )}
+
+                  {employees.map((employee) => (
+                    <MenuItem key={employee.id} value={employee.id}>
+                      {employee.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <Button
+                type="submit"
+                variant="contained"
+                sx={{ mt: 2 }}
+                disabled={createTaskMutation.isPending}
               >
-                <MenuItem value="pending">Pending</MenuItem>
-                <MenuItem value="in_progress">In Progress</MenuItem>
-                <MenuItem value="completed">Completed</MenuItem>
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Assign Employees</InputLabel>
-              <Select
-                multiple
-                value={employeeIds}
-                label="Assign Employees"
-                onChange={(event) => setEmployeeIds(event.target.value)}
-                renderValue={(selected) =>
-                  employees
-                    .filter((employee) => selected.includes(employee.id))
-                    .map((employee) => employee.name)
-                    .join(", ")
-                }
-              >
-                {employees.length === 0 && (
-                  <MenuItem disabled>No employees found</MenuItem>
-                )}
-
-                {employees.map((employee) => (
-                  <MenuItem key={employee.id} value={employee.id}>
-                    {employee.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <Button
-              type="submit"
-              variant="contained"
-              sx={{ mt: 2 }}
-              disabled={createTaskMutation.isPending}
-            >
-              {createTaskMutation.isPending ? "Creating..." : "Create Task"}
-            </Button>
-          </Box>
-        </CardContent>
-      </Card>
+                {createTaskMutation.isPending ? "Creating..." : "Create Task"}
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
 
       <Card sx={{ maxWidth: 1000, mx: "auto", mb: 3 }}>
         <CardContent>
@@ -552,6 +576,12 @@ function AdminDashboard() {
       </Card>
 
       <Box sx={{ maxWidth: 1000, mx: "auto" }}>
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>
+            All Tasks
+          </Typography>
+        </Box>
+
         {filteredTasks.length === 0 && (
           <Card>
             <CardContent>
@@ -560,20 +590,27 @@ function AdminDashboard() {
           </Card>
         )}
 
-        {filteredTasks.length > tasksPerPage && (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-            <Pagination
-              count={pageCount}
-              page={page}
-              onChange={(event, value) => setPage(value)}
-              color="primary"
-            />
-          </Box>
-        )}
-
         {paginatedTasks.map((task) => (
           <Card key={task.id} sx={{ mb: 2 }}>
-            <CardContent>
+            <CardContent
+              sx={
+                editingTaskId === task.id
+                  ? undefined
+                  : {
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: {
+                        xs: "flex-start",
+                        md: "center",
+                      },
+                      gap: 2,
+                      flexDirection: {
+                        xs: "column",
+                        md: "row",
+                      },
+                    }
+              }
+            >
               {editingTaskId === task.id ? (
                 <Box component="form" onSubmit={saveEditTask}>
                   <TextField
@@ -645,43 +682,73 @@ function AdminDashboard() {
                 </Box>
               ) : (
                 <>
-                  <Typography variant="h6">{task.title}</Typography>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="h6">{task.title}</Typography>
 
-                  <Typography color="text.secondary" sx={{ mb: 1 }}>
-                    {task.description}
-                  </Typography>
+                    <Typography color="text.secondary">
+                      {task.description || "No description"}
+                    </Typography>
 
-                  <StatusChip status={task.status} />
+                    <Typography sx={{ mt: 1 }}>
+                      Assigned to:{" "}
+                      {task.users?.length
+                        ? task.users.map((user) => user.name).join(", ")
+                        : "No assigned user"}
+                    </Typography>
+                  </Box>
 
-                  <Typography sx={{ mt: 1 }}>
-                    Assigned to:{" "}
-                    {task.users?.length
-                      ? task.users.map((user) => user.name).join(", ")
-                      : "No assigned user"}
-                  </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      flexShrink: 0,
+                      alignSelf: {
+                        xs: "stretch",
+                        md: "center",
+                      },
+                      justifyContent: {
+                        xs: "space-between",
+                        md: "flex-end",
+                      },
+                    }}
+                  >
+                    <StatusChip status={task.status} />
 
-                  <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
-                    <Button
-                      variant="outlined"
-                      onClick={() => startEditTask(task)}
-                    >
-                      Edit
-                    </Button>
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <Button
+                        variant="outlined"
+                        onClick={() => startEditTask(task)}
+                      >
+                        Edit
+                      </Button>
 
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={() => deleteTask(task.id)}
-                      disabled={deleteTaskMutation.isPending}
-                    >
-                      Delete
-                    </Button>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={() => deleteTask(task.id)}
+                        disabled={deleteTaskMutation.isPending}
+                      >
+                        Delete
+                      </Button>
+                    </Box>
                   </Box>
                 </>
               )}
             </CardContent>
           </Card>
         ))}
+
+        {filteredTasks.length > tasksPerPage && (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 3 }}>
+            <Pagination
+              count={pageCount}
+              page={page}
+              onChange={(event, value) => setPage(value)}
+              color="primary"
+            />
+          </Box>
+        )}
       </Box>
     </Box>
   );

@@ -6,7 +6,7 @@ A full-stack task management app built with a Laravel API and a React/Vite front
 
 ### Admin
 
-- View task totals for all tasks, pending tasks, and completed tasks.
+- View task totals for all tasks, pending tasks, in-progress tasks, and completed tasks.
 - Create, edit, filter, paginate, and delete tasks.
 - Assign one or more employees to each task from the admin dashboard.
 - Manage employee accounts from `/admin/users`.
@@ -23,7 +23,8 @@ A full-stack task management app built with a Laravel API and a React/Vite front
 
 - Laravel Sanctum bearer-token authentication.
 - Spatie role middleware for admin and employee API access.
-- React route protection using the stored token and role.
+- React route protection using tab-scoped session auth state.
+- Separate browser tabs can hold separate admin and employee logins for testing.
 - Profile photo uploads through Spatie Media Library.
 
 ## Tech Stack
@@ -64,7 +65,9 @@ task-manager/
 └── task-manager-frontend/
     ├── src/App.jsx
     ├── src/config/api.jsx
-    └── src/components/
+    ├── src/components/
+    ├── src/pages/
+    └── src/utils/
 ```
 
 ## Setup

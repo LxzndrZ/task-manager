@@ -6,9 +6,11 @@ Frontend config: `task-manager-frontend/src/config/api.jsx`
 
 Authentication uses Laravel Sanctum bearer tokens. After login, React stores:
 
-- `token` in `localStorage`
-- `user` in `localStorage`
-- `role` in `localStorage`
+- `token` in `sessionStorage`
+- `user` in `sessionStorage`
+- `role` in `sessionStorage`
+
+`sessionStorage` is tab-scoped, so separate tabs can hold separate admin and employee logins for testing.
 
 Protected requests send:
 
@@ -41,7 +43,7 @@ Authorization: Bearer {token}
 
 ### `POST /login`
 
-Used by: `task-manager-frontend/src/components/Login.jsx`
+Used by: `task-manager-frontend/src/pages/Login.jsx`
 
 When it runs:
 
@@ -51,7 +53,7 @@ When it runs:
 4. If credentials are valid, Laravel returns the authenticated user, role data, and Sanctum token.
 5. React immediately calls `GET /profile/{id}` using the returned token.
 6. React merges the login user data with profile data.
-7. React saves `token`, `user`, and `role` to `localStorage`.
+7. React saves `token`, `user`, and `role` to `sessionStorage`.
 8. React redirects admins to `/admin/dashboard` and employees to `/employee/dashboard`.
 
 Request body:
@@ -90,7 +92,7 @@ Failure response:
 
 ### `POST /register`
 
-Used by: `task-manager-frontend/src/components/Register.jsx`
+Used by: `task-manager-frontend/src/pages/Register.jsx`
 
 What it does:
 
@@ -122,14 +124,14 @@ Success response:
 
 Used by:
 
-- `task-manager-frontend/src/components/AdminDashboard.jsx`
-- `task-manager-frontend/src/components/EmployeeDashboard.jsx`
+- `task-manager-frontend/src/pages/AdminDashboard.jsx`
+- `task-manager-frontend/src/pages/EmployeeDashboard.jsx`
 
 Current frontend behavior:
 
 - `AdminDashboard.jsx` and `EmployeeDashboard.jsx` send `POST /logout` with the current bearer token.
 - The backend deletes the current Sanctum access token.
-- React clears `localStorage` and navigates to `/login`.
+- React clears this tab's auth data from `sessionStorage` and navigates to `/login`.
 
 What the backend route does:
 
@@ -150,7 +152,7 @@ Used by:
 
 When it runs:
 
-1. React reads `token` and user id from login data or `localStorage`.
+1. React reads `token` and user id from login data or `sessionStorage`.
 2. React sends a bearer-authenticated request.
 3. Laravel finds the user by `{id}`.
 4. Laravel returns basic profile fields and `photo_url`.
@@ -172,7 +174,7 @@ Success response:
 
 ### `PATCH /profile/{id}`
 
-Used by: `task-manager-frontend/src/components/ProfilePage.jsx`
+Used by: `task-manager-frontend/src/pages/ProfilePage.jsx`
 
 When it runs:
 
@@ -182,7 +184,7 @@ When it runs:
 4. React sends `name`, `email`, and `password` only when a new password is entered.
 5. Laravel validates optional `name`, optional unique `email`, and optional `password`.
 6. Laravel updates only the provided fields.
-7. React updates the stored user in `localStorage`.
+7. React updates the stored user in `sessionStorage`.
 8. React clears the password fields.
 9. React invalidates the React Query `profile` cache and displays success.
 
@@ -200,7 +202,7 @@ React omits `password` when the user leaves the new password field blank. Passwo
 
 ### `POST /profile/{id}/photo`
 
-Used by: `task-manager-frontend/src/components/ProfilePage.jsx`
+Used by: `task-manager-frontend/src/pages/ProfilePage.jsx`
 
 When it runs:
 
@@ -212,7 +214,7 @@ When it runs:
 6. Laravel validates that `photo` is an image and is no larger than 2048 KB.
 7. Laravel clears the existing `profile_photo` media collection.
 8. Laravel stores the new image in the `profile_photo` media collection.
-9. React updates `localStorage.user.photo_url`, invalidates the profile cache, clears the selected file, and displays success.
+9. React updates `sessionStorage.user.photo_url`, invalidates the profile cache, clears the selected file, and displays success.
 
 Request body:
 
@@ -258,7 +260,7 @@ When it runs in `UserManagement.jsx`:
 1. User opens `/admin/users`.
 2. React Query sends `GET /users`.
 3. Laravel returns all users with roles.
-4. React filters employees and displays employee cards.
+4. React filters employees and displays a paginated employee table.
 
 Success response:
 
@@ -280,7 +282,7 @@ Success response:
 
 ### `POST /users`
 
-Used by: `task-manager-frontend/src/components/UserManagement.jsx`
+Used by: `task-manager-frontend/src/pages/UserManagement.jsx`
 
 When it runs:
 
@@ -309,7 +311,7 @@ Success response:
 
 ### `PUT /users/{id}`
 
-Used by: `task-manager-frontend/src/components/UserManagement.jsx`
+Used by: `task-manager-frontend/src/pages/UserManagement.jsx`
 
 When it runs:
 
@@ -337,7 +339,7 @@ Note: React sends an empty string when the admin leaves the password field blank
 
 ### `DELETE /users/{id}`
 
-Used by: `task-manager-frontend/src/components/UserManagement.jsx`
+Used by: `task-manager-frontend/src/pages/UserManagement.jsx`
 
 When it runs:
 
@@ -374,7 +376,7 @@ These routes require:
 
 ### `GET /tasks`
 
-Used by: `task-manager-frontend/src/components/AdminDashboard.jsx`
+Used by: `task-manager-frontend/src/pages/AdminDashboard.jsx`
 
 When it runs:
 
@@ -405,7 +407,7 @@ Success response:
 
 ### `POST /tasks`
 
-Used by: `task-manager-frontend/src/components/AdminDashboard.jsx`
+Used by: `task-manager-frontend/src/pages/AdminDashboard.jsx`
 
 When it runs:
 
@@ -438,7 +440,7 @@ The current React create and edit forms expose all three statuses.
 
 ### `PUT /tasks/{id}`
 
-Used by: `task-manager-frontend/src/components/AdminDashboard.jsx`
+Used by: `task-manager-frontend/src/pages/AdminDashboard.jsx`
 
 When it runs:
 
@@ -467,7 +469,7 @@ The backend restricts `status` to the same allowed values used by task creation 
 
 ### `DELETE /tasks/{id}`
 
-Used by: `task-manager-frontend/src/components/AdminDashboard.jsx`
+Used by: `task-manager-frontend/src/pages/AdminDashboard.jsx`
 
 When it runs:
 
@@ -496,7 +498,7 @@ These routes require:
 
 ### `GET /my-tasks`
 
-Used by: `task-manager-frontend/src/components/EmployeeDashboard.jsx`
+Used by: `task-manager-frontend/src/pages/EmployeeDashboard.jsx`
 
 When it runs:
 
@@ -527,7 +529,7 @@ Success response:
 
 ### `PATCH /tasks/{id}/status`
 
-Used by: `task-manager-frontend/src/components/EmployeeDashboard.jsx`
+Used by: `task-manager-frontend/src/pages/EmployeeDashboard.jsx`
 
 When it runs:
 
@@ -584,7 +586,7 @@ API flow:
 
 1. `POST /login`
 2. `GET /profile/{id}`
-3. Save login state to `localStorage`
+3. Save login state to `sessionStorage`
 4. Redirect by role
 
 ### `/register`
@@ -651,13 +653,13 @@ API flow on load:
 API flow on profile update:
 
 1. `PATCH /profile/{id}`
-2. Update `localStorage.user`
+2. Update `sessionStorage.user`
 3. Invalidate `["profile", user.id]`
 
 API flow on photo upload:
 
 1. `POST /profile/{id}/photo`
-2. Update `localStorage.user.photo_url`
+2. Update `sessionStorage.user.photo_url`
 3. Invalidate `["profile", user.id]`
 
 ### `/admin/users`

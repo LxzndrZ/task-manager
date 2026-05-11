@@ -1,11 +1,11 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./components/Login";
-import ProfilePage from "./components/ProfilePage";
-import EmployeeDashboard from "./components/EmployeeDashboard";
-import AdminDashboard from "./components/AdminDashboard";
-import UserManagement from "./components/UserManagement";
-import Register from "./components/Register";
+import Login from "./pages/Login";
+import ProfilePage from "./pages/ProfilePage";
+import EmployeeDashboard from "./pages/EmployeeDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import UserManagement from "./pages/UserManagement";
+import Register from "./pages/Register";
 
 function App() {
   return (

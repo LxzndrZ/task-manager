@@ -10,17 +10,22 @@ import {
   Typography,
   Alert,
   Avatar,
+  Pagination,
 } from "@mui/material";
 import API_URL from "../config/api";
-import StatusChip from "./StatusChip";
+import StatusChip from "../components/StatusChip";
+import { clearAuthSession, getAuthToken, getAuthUser } from "../utils/authSession";
 
 function EmployeeDashboard() {
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user"));
+  const tasksPerPage = 5;
+
+  const token = getAuthToken();
+  const user = getAuthUser();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user.id],
@@ -56,9 +61,19 @@ function EmployeeDashboard() {
     return {
       total: tasks.length,
       pending: tasks.filter((task) => task.status === "pending").length,
+      inProgress: tasks.filter((task) => task.status === "in_progress").length,
       completed: tasks.filter((task) => task.status === "completed").length,
     };
   }, [tasks]);
+
+  const pageCount = Math.ceil(tasks.length / tasksPerPage);
+
+  const paginatedTasks = useMemo(() => {
+    const startIndex = (page - 1) * tasksPerPage;
+    const endIndex = startIndex + tasksPerPage;
+
+    return tasks.slice(startIndex, endIndex);
+  }, [tasks, page]);
 
   const updateTaskStatusMutation = useMutation({
     mutationFn: async ({ taskId, newStatus }) => {
@@ -94,7 +109,7 @@ function EmployeeDashboard() {
   };
 
   const handleLogout = async () => {
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
 
     try {
       await axios.post(
@@ -109,7 +124,7 @@ function EmployeeDashboard() {
     } catch {
       console.log("Backend logout failed, clearing local session.");
     } finally {
-      localStorage.clear();
+      clearAuthSession();
       navigate("/login");
     }
   };
@@ -178,7 +193,7 @@ function EmployeeDashboard() {
           gridTemplateColumns: {
             xs: "1fr",
             sm: "repeat(2, 1fr)",
-            md: "repeat(3, 1fr)",
+            md: "repeat(4, 1fr)",
           },
           gap: 2,
           mb: 3,
@@ -186,7 +201,7 @@ function EmployeeDashboard() {
       >
         <Card>
           <CardContent>
-            <Typography color="text.secondary">My Tasks</Typography>
+            <Typography color="text.secondary">Total Tasks</Typography>
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
               {taskStats.total}
             </Typography>
@@ -195,7 +210,7 @@ function EmployeeDashboard() {
 
         <Card>
           <CardContent>
-            <Typography color="text.secondary">Pending</Typography>
+            <Typography color="text.secondary">Pending Tasks</Typography>
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
               {taskStats.pending}
             </Typography>
@@ -204,7 +219,16 @@ function EmployeeDashboard() {
 
         <Card>
           <CardContent>
-            <Typography color="text.secondary">Completed</Typography>
+            <Typography color="text.secondary">In Progress Tasks</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 700 }}>
+              {taskStats.inProgress}
+            </Typography>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent>
+            <Typography color="text.secondary">Completed Tasks</Typography>
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
               {taskStats.completed}
             </Typography>
@@ -213,6 +237,15 @@ function EmployeeDashboard() {
       </Box>
 
       <Box sx={{ maxWidth: 1000, mx: "auto" }}>
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>
+            My Work
+          </Typography>
+          <Typography color="text.secondary">
+            Tasks currently assigned to you.
+          </Typography>
+        </Box>
+
         {tasks.length === 0 && (
           <Card>
             <CardContent>
@@ -221,47 +254,85 @@ function EmployeeDashboard() {
           </Card>
         )}
 
-        {tasks.map((task) => (
+        {paginatedTasks.map((task) => (
           <Card key={task.id} sx={{ mb: 2 }}>
-            <CardContent>
-              <Typography variant="h6">{task.title}</Typography>
+            <CardContent
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: {
+                  xs: "flex-start",
+                  md: "center",
+                },
+                gap: 2,
+                flexDirection: {
+                  xs: "column",
+                  md: "row",
+                },
+              }}
+            >
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="h6">{task.title}</Typography>
 
-              <Typography color="text.secondary" sx={{ mb: 1 }}>
-                {task.description}
-              </Typography>
-
-              <Box sx={{ mb: 2 }}>
-                <StatusChip status={task.status} />
+                <Typography color="text.secondary">
+                  {task.description || "No description"}
+                </Typography>
               </Box>
 
-              {task.status === "pending" && (
-                <Button
-                  variant="contained"
-                  onClick={() => updateTaskStatus(task.id, "in_progress")}
-                  disabled={updateTaskStatusMutation.isPending}
-                >
-                  Start Task
-                </Button>
-              )}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  flexShrink: 0,
+                  alignSelf: {
+                    xs: "stretch",
+                    md: "center",
+                  },
+                  justifyContent: {
+                    xs: "space-between",
+                    md: "flex-end",
+                  },
+                }}
+              >
+                <StatusChip status={task.status} />
 
-              {task.status === "in_progress" && (
-                <Button
-                  variant="contained"
-                  onClick={() => updateTaskStatus(task.id, "completed")}
-                  disabled={updateTaskStatusMutation.isPending}
-                >
-                  Complete Task
-                </Button>
-              )}
+                {task.status === "pending" && (
+                  <Button
+                    variant="contained"
+                    onClick={() => updateTaskStatus(task.id, "in_progress")}
+                    disabled={updateTaskStatusMutation.isPending}
+                    sx={{ whiteSpace: "nowrap" }}
+                  >
+                    Start Task
+                  </Button>
+                )}
 
-              {task.status === "completed" && (
-                <Button variant="contained" disabled>
-                  Completed
-                </Button>
-              )}
+                {task.status === "in_progress" && (
+                  <Button
+                    variant="contained"
+                    onClick={() => updateTaskStatus(task.id, "completed")}
+                    disabled={updateTaskStatusMutation.isPending}
+                    sx={{ whiteSpace: "nowrap" }}
+                  >
+                    Complete Task
+                  </Button>
+                )}
+              </Box>
             </CardContent>
           </Card>
         ))}
+
+        {tasks.length > tasksPerPage && (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+            <Pagination
+              count={pageCount}
+              page={page}
+              onChange={(event, value) => setPage(value)}
+              color="primary"
+            />
+          </Box>
+        )}
       </Box>
     </Box>
   );

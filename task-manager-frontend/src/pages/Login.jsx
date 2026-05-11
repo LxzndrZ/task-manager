@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API_URL from "../config/api";
 import axios from "axios";
+import { setAuthSession } from "../utils/authSession";
 import {
   Box,
   Button,
@@ -45,9 +46,11 @@ function Login() {
         ...profileResponse.data,
       };
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(fullUser));
-      localStorage.setItem("role", role);
+      setAuthSession({
+        token,
+        user: fullUser,
+        role,
+      });
 
       if (role === "admin") {
         navigate("/admin/dashboard");

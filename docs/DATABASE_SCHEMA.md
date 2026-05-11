@@ -157,7 +157,7 @@ Current app behavior:
 
 - `POST /login` creates a token.
 - `POST /register` creates a token.
-- `POST /logout` deletes the current token. The admin and employee dashboards call this endpoint before clearing `localStorage`.
+- `POST /logout` deletes the current token. The admin and employee dashboards call this endpoint before clearing this tab's auth data from `sessionStorage`.
 
 ### `roles`
 

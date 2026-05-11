@@ -66,9 +66,10 @@ Roles are handled by Spatie Permission in Laravel.
 
 Frontend role behavior:
 
-- React stores the logged-in user's role in `localStorage`.
+- React stores the logged-in user's role in `sessionStorage`.
 - React uses that role to decide which dashboard to show.
 - `ProtectedRoute.jsx` blocks pages if the stored role does not match the route.
+- Because `sessionStorage` is scoped to one tab, an admin and an employee can be logged in at the same time in separate tabs.
 
 Backend role behavior:
 
@@ -112,6 +113,7 @@ task-manager-frontend/src/App.jsx
 | --- | --- | --- |
 | `/` | Redirects to `/login` | Public |
 | `/login` | `Login.jsx` | Public |
+| `/register` | `Register.jsx` | Public |
 | `/admin/dashboard` | `AdminDashboard.jsx` | Admin only |
 | `/employee/dashboard` | `EmployeeDashboard.jsx` | Employee only |
 | `/profile` | `ProfilePage.jsx` | Any logged-in user |
@@ -127,8 +129,8 @@ task-manager-frontend/src/components/ProtectedRoute.jsx
 
 How it works:
 
-1. Reads `token` from `localStorage`.
-2. Reads `role` from `localStorage`.
+1. Reads `token` from `sessionStorage`.
+2. Reads `role` from `sessionStorage`.
 3. If there is no token, redirects to `/login`.
 4. If the route requires a role and the stored role does not match:
    - Admin users go to `/admin/dashboard`.
@@ -206,7 +208,7 @@ sequenceDiagram
     Auth-->>React: Return user, roles, token
     React->>API: GET /profile/{id}
     API-->>React: Return profile + photo_url
-    React->>React: Save token, user, role in localStorage
+    React->>React: Save token, user, role in sessionStorage
     React->>User: Redirect by role
 ```
 
@@ -241,7 +243,7 @@ If credentials are invalid:
 Main file:
 
 ```txt
-task-manager-frontend/src/components/Register.jsx
+task-manager-frontend/src/pages/Register.jsx
 ```
 
 Step-by-step:
@@ -263,7 +265,7 @@ Important note:
 Main file:
 
 ```txt
-task-manager-frontend/src/components/AdminDashboard.jsx
+task-manager-frontend/src/pages/AdminDashboard.jsx
 ```
 
 Backend files:
@@ -294,7 +296,7 @@ When an admin opens `/admin/dashboard`, React loads three sets of data:
 Flow:
 
 1. `ProtectedRoute` confirms there is a token and role is `admin`.
-2. `AdminDashboard.jsx` reads `token` and `user` from `localStorage`.
+2. `AdminDashboard.jsx` reads `token` and `user` from `sessionStorage`.
 3. React Query loads the admin profile.
 4. React Query loads all tasks.
 5. `fetchEmployees()` loads all users.
@@ -302,9 +304,11 @@ Flow:
 7. Dashboard displays:
    - Total task count
    - Pending task count
+   - In-progress task count
    - Completed task count
    - Create Task form
-   - Task cards
+   - Search, status, and employee filters
+   - Paginated task cards
 
 ### Admin Creates a Task
 
@@ -378,7 +382,7 @@ Flow:
 Main file:
 
 ```txt
-task-manager-frontend/src/components/UserManagement.jsx
+task-manager-frontend/src/pages/UserManagement.jsx
 ```
 
 Backend file:
@@ -401,7 +405,7 @@ When an admin opens `/admin/users`:
 2. React Query sends `GET /users`.
 3. `UserController@index` returns all users with roles.
 4. React filters the list to users with the `employee` role.
-5. The page displays employee cards.
+5. The page displays a paginated employee table.
 
 ### Admin Creates an Employee
 
@@ -448,7 +452,7 @@ Flow:
 Main file:
 
 ```txt
-task-manager-frontend/src/components/EmployeeDashboard.jsx
+task-manager-frontend/src/pages/EmployeeDashboard.jsx
 ```
 
 Backend file:
@@ -468,7 +472,7 @@ Database tables:
 When an employee opens `/employee/dashboard`:
 
 1. `ProtectedRoute` confirms role is `employee`.
-2. React reads `token` and `user` from `localStorage`.
+2. React reads `token` and `user` from `sessionStorage`.
 3. React Query sends `GET /profile/{id}`.
 4. React Query sends `GET /my-tasks`.
 5. `TaskController@myTasks` reads the authenticated user from the Sanctum token.
@@ -476,8 +480,9 @@ When an employee opens `/employee/dashboard`:
 7. React calculates:
    - Total assigned tasks
    - Pending tasks
+   - In-progress tasks
    - Completed tasks
-8. React renders the assigned task cards.
+8. React renders paginated assigned task cards.
 
 ### Employee Updates Task Status
 
@@ -516,7 +521,7 @@ Step-by-step:
 Main file:
 
 ```txt
-task-manager-frontend/src/components/ProfilePage.jsx
+task-manager-frontend/src/pages/ProfilePage.jsx
 ```
 
 Backend file:
@@ -535,7 +540,7 @@ Database tables:
 When a logged-in user opens `/profile`:
 
 1. `ProtectedRoute` checks that a token exists.
-2. React reads `token`, `user`, and `role` from `localStorage`.
+2. React reads `token`, `user`, and `role` from `sessionStorage`.
 3. React Query sends `GET /profile/{id}`.
 4. Laravel returns profile fields and `photo_url`.
 5. React fills the name and email form fields.
@@ -551,7 +556,7 @@ Flow:
 4. React sends `PATCH /profile/{id}`.
 5. `UserController@updateProfile` validates the request.
 6. Laravel updates the `users` row.
-7. React updates `localStorage.user`.
+7. React updates `sessionStorage.user`.
 8. React clears the password fields.
 9. React invalidates `["profile", user.id]`.
 10. Profile data reloads.
@@ -568,12 +573,12 @@ Flow:
 6. Laravel clears the existing `profile_photo` media collection.
 7. Laravel stores the new image.
 8. Laravel returns the new `photo_url`.
-9. React updates `localStorage.user.photo_url`.
+9. React updates `sessionStorage.user.photo_url`.
 10. React invalidates the profile query.
 
 ### Back Button Behavior
 
-The profile page sends users back based on `localStorage.role`:
+The profile page sends users back based on `sessionStorage.role`:
 
 - `admin` goes to `/admin/dashboard`.
 - Any other role goes to `/employee/dashboard`.
@@ -772,7 +777,7 @@ Current React behavior:
 1. User clicks `Logout`.
 2. React sends `POST /logout` with the bearer token.
 3. Laravel deletes the current Sanctum token with `currentAccessToken()->delete()`.
-4. React clears all `localStorage`.
+4. React clears this tab's auth data from `sessionStorage`.
 5. React navigates to `/login`.
 
 ## Fresh Install Expectations
@@ -798,5 +803,6 @@ Current seeder note:
 
 These are not blockers for understanding the system, but they are worth knowing:
 
-- Frontend route protection depends on `localStorage`, which users can edit. Backend middleware is the real security layer.
+- Frontend route protection depends on `sessionStorage`, which users can edit. Backend middleware is the real security layer.
+- Session state is per tab, so opening a fresh tab requires logging in again unless the tab was duplicated by the browser.
 - `task_user` has no database-level unique constraint on `(task_id, user_id)`.
