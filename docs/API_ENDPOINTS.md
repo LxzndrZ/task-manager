@@ -25,9 +25,9 @@ Authorization: Bearer {token}
 | `POST` | `/register` | No | Public | `AuthController@register` | `Register.jsx` |
 | `POST` | `/login` | No | Public | `AuthController@login` | `Login.jsx` |
 | `POST` | `/logout` | Yes | Any authenticated user | `AuthController@logout` | `AdminDashboard.jsx`, `EmployeeDashboard.jsx` |
-| `GET` | `/profile/{id}` | Yes | Any authenticated user | `UserController@profile` | `Login.jsx`, `AdminDashboard.jsx`, `EmployeeDashboard.jsx`, `ProfilePage.jsx` |
-| `PATCH` | `/profile/{id}` | Yes | Any authenticated user | `UserController@updateProfile` | `ProfilePage.jsx` |
-| `POST` | `/profile/{id}/photo` | Yes | Any authenticated user | `UserController@uploadProfilePhoto` | `ProfilePage.jsx` |
+| `GET` | `/profile` | Yes | Any authenticated user | `ProfileController@show` | `Login.jsx`, `AdminDashboard.jsx`, `EmployeeDashboard.jsx`, `ProfilePage.jsx` |
+| `PATCH` | `/profile` | Yes | Any authenticated user | `ProfileController@update` | `ProfilePage.jsx` |
+| `POST` | `/profile/photo` | Yes | Any authenticated user | `ProfileController@uploadPhoto` | `ProfilePage.jsx` |
 | `GET` | `/users` | Yes | Admin | `UserController@index` | `AdminDashboard.jsx`, `UserManagement.jsx` |
 | `POST` | `/users` | Yes | Admin | `UserController@store` | `UserManagement.jsx` |
 | `PUT` | `/users/{id}` | Yes | Admin | `UserController@update` | `UserManagement.jsx` |
@@ -51,7 +51,7 @@ When it runs:
 2. React sends `email` and `password`.
 3. Laravel validates the credentials.
 4. If credentials are valid, Laravel returns the authenticated user, role data, and Sanctum token.
-5. React immediately calls `GET /profile/{id}` using the returned token.
+5. React immediately calls `GET /profile` using the returned token.
 6. React merges the login user data with profile data.
 7. React saves `token`, `user`, and `role` to `sessionStorage`.
 8. React redirects admins to `/admin/dashboard` and employees to `/employee/dashboard`.
@@ -141,7 +141,7 @@ What the backend route does:
 
 ## Profile Endpoints
 
-### `GET /profile/{id}`
+### `GET /profile`
 
 Used by:
 
@@ -172,14 +172,14 @@ Success response:
 }
 ```
 
-### `PATCH /profile/{id}`
+### `PATCH /profile`
 
 Used by: `task-manager-frontend/src/pages/ProfilePage.jsx`
 
 When it runs:
 
 1. User opens `/profile`.
-2. React loads the profile with `GET /profile/{id}` and fills the form.
+2. React loads the profile with `GET /profile` and fills the form.
 3. User edits name, email, and optionally password, then submits the profile form.
 4. React sends `name`, `email`, and `password` only when a new password is entered.
 5. Laravel validates optional `name`, optional unique `email`, and optional `password`.
@@ -200,7 +200,7 @@ Request body currently sent by React:
 
 React omits `password` when the user leaves the new password field blank. Password confirmation is checked on the frontend before the request.
 
-### `POST /profile/{id}/photo`
+### `POST /profile/photo`
 
 Used by: `task-manager-frontend/src/pages/ProfilePage.jsx`
 
@@ -585,7 +585,7 @@ Component: `Login.jsx`
 API flow:
 
 1. `POST /login`
-2. `GET /profile/{id}`
+2. `GET /profile`
 3. Save login state to `sessionStorage`
 4. Redirect by role
 
@@ -605,7 +605,7 @@ Component: `AdminDashboard.jsx`
 
 API flow on load:
 
-1. `GET /profile/{id}`
+1. `GET /profile`
 2. `GET /tasks`
 3. `GET /users`
 
@@ -633,7 +633,7 @@ Component: `EmployeeDashboard.jsx`
 
 API flow on load:
 
-1. `GET /profile/{id}`
+1. `GET /profile`
 2. `GET /my-tasks`
 
 API flow on updating task status:
@@ -648,17 +648,17 @@ Component: `ProfilePage.jsx`
 
 API flow on load:
 
-1. `GET /profile/{id}`
+1. `GET /profile`
 
 API flow on profile update:
 
-1. `PATCH /profile/{id}`
+1. `PATCH /profile`
 2. Update `sessionStorage.user`
 3. Invalidate `["profile", user.id]`
 
 API flow on photo upload:
 
-1. `POST /profile/{id}/photo`
+1. `POST /profile/photo`
 2. Update `sessionStorage.user.photo_url`
 3. Invalidate `["profile", user.id]`
 

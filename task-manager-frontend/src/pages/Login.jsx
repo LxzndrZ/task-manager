@@ -35,7 +35,7 @@ function Login() {
       const { user, token } = response.data;
       const role = user.roles?.[0]?.name;
 
-      const profileResponse = await axios.get(`${API_URL}/profile/${user.id}`, {
+      const profileResponse = await axios.get(`${API_URL}/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

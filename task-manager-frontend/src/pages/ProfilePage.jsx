@@ -46,7 +46,7 @@ function ProfilePage() {
   } = useQuery({
     queryKey: ["profile", storedUser.id],
     queryFn: async () => {
-      const response = await axios.get(`${API_URL}/profile/${storedUser.id}`, {
+      const response = await axios.get(`${API_URL}/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -66,7 +66,7 @@ function ProfilePage() {
   const updateProfileMutation = useMutation({
     mutationFn: async () => {
       const response = await axios.patch(
-        `${API_URL}/profile/${storedUser.id}`,
+        `${API_URL}/profile`,
         {
           name,
           email,
@@ -108,7 +108,7 @@ function ProfilePage() {
       formData.append("photo", photo);
 
       const response = await axios.post(
-        `${API_URL}/profile/${storedUser.id}/photo`,
+        `${API_URL}/profile/photo`,
         formData,
         {
           headers: {

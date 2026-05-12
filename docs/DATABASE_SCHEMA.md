@@ -313,10 +313,10 @@ Columns:
 
 Current app behavior:
 
-- `POST /profile/{id}/photo` validates one image up to 2048 KB.
+- `POST /profile/photo` validates one image up to 2048 KB.
 - Existing `profile_photo` media for the user is cleared.
 - The new photo is stored in the `profile_photo` collection.
-- `GET /profile/{id}` returns `photo_url` from the first media item in that collection.
+- `GET /profile` returns `photo_url` from the first media item in that collection.
 
 ## Laravel Framework Tables
 
@@ -562,7 +562,7 @@ erDiagram
 1. Existing `media` rows for the user's `profile_photo` collection are cleared.
 2. A new `media` row is inserted.
 3. The uploaded file is stored on disk.
-4. `GET /profile/{id}` returns the generated `photo_url`.
+4. `GET /profile` returns the generated `photo_url`.
 
 ## Seeder Notes
 

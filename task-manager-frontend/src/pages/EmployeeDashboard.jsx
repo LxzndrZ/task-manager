@@ -30,7 +30,7 @@ function EmployeeDashboard() {
   const { data: profile } = useQuery({
     queryKey: ["profile", user.id],
     queryFn: async () => {
-      const response = await axios.get(`${API_URL}/profile/${user.id}`, {
+      const response = await axios.get(`${API_URL}/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

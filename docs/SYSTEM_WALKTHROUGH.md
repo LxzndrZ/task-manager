@@ -158,9 +158,9 @@ Public API routes:
 Authenticated API routes:
 
 - `POST /logout`
-- `GET /profile/{id}`
-- `PATCH /profile/{id}`
-- `POST /profile/{id}/photo`
+- `GET /profile`
+- `PATCH /profile`
+- `POST /profile/photo`
 
 Admin-only API routes:
 
@@ -206,7 +206,7 @@ sequenceDiagram
     Auth->>Auth: Check password hash
     Auth->>DB: Insert Sanctum token
     Auth-->>React: Return user, roles, token
-    React->>API: GET /profile/{id}
+    React->>API: GET /profile
     API-->>React: Return profile + photo_url
     React->>React: Save token, user, role in sessionStorage
     React->>User: Redirect by role
@@ -221,7 +221,7 @@ Step-by-step:
 5. Laravel checks the submitted password against the hashed password.
 6. If valid, Laravel creates a Sanctum token.
 7. Laravel returns user data, roles, and token.
-8. React calls `GET /profile/{id}` to get complete profile data.
+8. React calls `GET /profile` to get complete profile data.
 9. React stores:
    - `token`
    - `user`
@@ -289,7 +289,7 @@ When an admin opens `/admin/dashboard`, React loads three sets of data:
 
 | Data | API Call | Purpose |
 | --- | --- | --- |
-| Profile | `GET /profile/{id}` | Shows avatar and user name |
+| Profile | `GET /profile` | Shows avatar and user name |
 | Tasks | `GET /tasks` | Shows task list and task statistics |
 | Users | `GET /users` | Loads employees for assignment dropdowns |
 
@@ -473,7 +473,7 @@ When an employee opens `/employee/dashboard`:
 
 1. `ProtectedRoute` confirms role is `employee`.
 2. React reads `token` and `user` from `sessionStorage`.
-3. React Query sends `GET /profile/{id}`.
+3. React Query sends `GET /profile`.
 4. React Query sends `GET /my-tasks`.
 5. `TaskController@myTasks` reads the authenticated user from the Sanctum token.
 6. Laravel returns tasks assigned through `task_user`.
@@ -541,8 +541,8 @@ When a logged-in user opens `/profile`:
 
 1. `ProtectedRoute` checks that a token exists.
 2. React reads `token`, `user`, and `role` from `sessionStorage`.
-3. React Query sends `GET /profile/{id}`.
-4. Laravel returns profile fields and `photo_url`.
+3. React Query sends `GET /profile`.
+4. Laravel returns profile fields and `photo_url` for the authenticated user.
 5. React fills the name and email form fields.
 6. React displays the avatar using `photo_url`.
 
@@ -553,8 +553,8 @@ Flow:
 1. User edits name, email, and optionally password.
 2. User clicks `Save Changes`.
 3. React checks password length and confirmation when a new password is entered.
-4. React sends `PATCH /profile/{id}`.
-5. `UserController@updateProfile` validates the request.
+4. React sends `PATCH /profile`.
+5. `ProfileController@update` validates the request.
 6. Laravel updates the `users` row.
 7. React updates `sessionStorage.user`.
 8. React clears the password fields.
@@ -568,7 +568,7 @@ Flow:
 1. User chooses an image file.
 2. User clicks `Upload Photo`.
 3. React creates `FormData` and appends the file as `photo`.
-4. React sends `POST /profile/{id}/photo`.
+4. React sends `POST /profile/photo`.
 5. Laravel validates that the file is an image up to 2048 KB.
 6. Laravel clears the existing `profile_photo` media collection.
 7. Laravel stores the new image.
